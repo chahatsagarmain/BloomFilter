@@ -131,6 +131,158 @@ Upon launching, choose between:
 1. **Standard Bit Bloom Filter**
 2. **Counting Bloom Filter** (enables the delete option in the menu)
 
+### Example CLI Sessions
+
+#### 1. Standard Bit Bloom Filter Session
+
+```text
+=============================================
+      Interactive Bloom Filter CLI
+=============================================
+Choose Bloom Filter type (1: Standard Bit, 2: Counting) [Default: 1]: 1
+Do you want to configure filter size and hash functions? (y/N): n
+
+✔ Bloom Filter initialized successfully!
+  • Type: bit
+  • Size: 1000 bits
+  • Hash Functions (k): 3
+
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Exit
+Enter choice: 1
+Enter string to insert: hello
+✔ Successfully inserted string: "hello"
+  Current Fill Ratio: 0.30%
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Exit
+Enter choice: 1
+Enter string to insert: world
+✔ Successfully inserted string: "world"
+  Current Fill Ratio: 0.60%
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Exit
+Enter choice: 2
+Enter string to check: hello
+★ String "hello" is PROBABLY in the filter (might be a false positive).
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Exit
+Enter choice: 2
+Enter string to check: golang
+✖ String "golang" is DEFINITELY NOT in the filter.
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Exit
+Enter choice: 3
+Filter Saturation (Fill Ratio): 0.6000%
+✔ Good saturation level.
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Exit
+Enter choice: 4
+
+Goodbye!
+```
+
+#### 2. Counting Bloom Filter Session (with deletion support)
+
+```text
+=============================================
+      Interactive Bloom Filter CLI
+=============================================
+Choose Bloom Filter type (1: Standard Bit, 2: Counting) [Default: 1]: 2
+Do you want to configure filter size and hash functions? (y/N): n
+
+✔ Bloom Filter initialized successfully!
+  • Type: counting
+  • Size: 1000 bits
+  • Hash Functions (k): 3
+
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Delete string
+  5) Exit
+Enter choice: 1
+Enter string to insert: golang
+✔ Successfully inserted string: "golang"
+  Current Fill Ratio: 0.30%
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Delete string
+  5) Exit
+Enter choice: 2
+Enter string to check: golang
+★ String "golang" is PROBABLY in the filter (might be a false positive).
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Delete string
+  5) Exit
+Enter choice: 4
+Enter string to delete: golang
+✔ Successfully deleted string: "golang"
+  Current Fill Ratio: 0.00%
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Delete string
+  5) Exit
+Enter choice: 2
+Enter string to check: golang
+✖ String "golang" is DEFINITELY NOT in the filter.
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Delete string
+  5) Exit
+Enter choice: 3
+Filter Saturation (Fill Ratio): 0.0000%
+✔ Good saturation level.
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Delete string
+  5) Exit
+Enter choice: 5
+
+Goodbye!
+```
+
 ---
 
 ## Running Tests
