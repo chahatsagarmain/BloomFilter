@@ -1,4 +1,4 @@
-# Simple Bloom Filter in Go
+# Bloom Filter in Go
 
 A lightweight, clean, and modular implementation of a **Bloom Filter** written in Go. This library provides both a standard bit-array Bloom Filter and a Counting Bloom Filter (which supports element deletion).
 
