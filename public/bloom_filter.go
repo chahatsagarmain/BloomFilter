@@ -32,13 +32,16 @@ type BloomFilter interface {
 	K() int
 }
 
-// DeletableBloomFilter defines a Bloom Filter that supports element deletion.
+// DeletableBloomFilter defines a Bloom Filter that supports element deletion and update.
 // Counting Bloom Filters implement this interface.
 type DeletableBloomFilter interface {
 	BloomFilter
 
 	// Delete removes a string from the Bloom Filter.
 	Delete(s string)
+
+	// Update replaces an existing string in the filter with a new one.
+	Update(oldStr, newStr string)
 }
 
 // BloomFactory creates and returns a BloomFilter of the specified type ("bit" or "counting").

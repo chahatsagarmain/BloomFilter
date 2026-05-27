@@ -81,7 +81,8 @@ func main() {
 		fmt.Println(Cyan + "  3)" + Reset + " View saturation (Fill Ratio)")
 		if isDeletable {
 			fmt.Println(Cyan + "  4)" + Reset + " Delete string")
-			fmt.Println(Red + "  5)" + Reset + " Exit")
+			fmt.Println(Cyan + "  5)" + Reset + " Update string")
+			fmt.Println(Red + "  6)" + Reset + " Exit")
 		} else {
 			fmt.Println(Red + "  4)" + Reset + " Exit")
 		}
@@ -151,10 +152,33 @@ func main() {
 
 		case "5":
 			if isDeletable {
+				fmt.Print("Enter old string to replace: ")
+				oldInput, _ := reader.ReadString('\n')
+				oldInput = strings.TrimSpace(oldInput)
+				if oldInput == "" {
+					fmt.Println(Yellow + "⚠ Warning: Cannot update an empty string." + Reset)
+					continue
+				}
+				fmt.Print("Enter new string: ")
+				newInput, _ := reader.ReadString('\n')
+				newInput = strings.TrimSpace(newInput)
+				if newInput == "" {
+					fmt.Println(Yellow + "⚠ Warning: Cannot update to an empty string." + Reset)
+					continue
+				}
+				deletableFilter.Update(oldInput, newInput)
+				fmt.Printf(Green+"✔ Successfully updated string from "+Reset+"\"%s\" to \"%s\"\n", oldInput, newInput)
+				fmt.Printf("  Current Fill Ratio: %.2f%%\n", filter.FillRatio()*100)
+			} else {
+				fmt.Println(Red + "✗ Invalid option. Please enter 1, 2, 3, or 4." + Reset)
+			}
+
+		case "6":
+			if isDeletable {
 				fmt.Println(Bold + Green + "\nGoodbye!" + Reset)
 				return
 			} else {
-				fmt.Println(Red + "✗ Invalid option. Please enter a valid number." + Reset)
+				fmt.Println(Red + "✗ Invalid option. Please enter 1, 2, 3, or 4." + Reset)
 			}
 
 		case "exit", "quit":
@@ -163,7 +187,7 @@ func main() {
 
 		default:
 			if isDeletable {
-				fmt.Println(Red + "✗ Invalid option. Please enter 1, 2, 3, 4, or 5." + Reset)
+				fmt.Println(Red + "✗ Invalid option. Please enter 1, 2, 3, 4, 5, or 6." + Reset)
 			} else {
 				fmt.Println(Red + "✗ Invalid option. Please enter 1, 2, 3, or 4." + Reset)
 			}

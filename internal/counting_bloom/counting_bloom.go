@@ -91,6 +91,25 @@ func (f *CountingFilter) Delete(s string) {
 	}
 }
 
+// Update replaces an existing string in the filter with a new one.
+// It atomically decrements the counters for the old string's indices and increments them for the new string's indices.
+func (f *CountingFilter) Update(oldStr, newStr string) {
+	oldIndices := f.getHashIndices(oldStr)
+	newIndices := f.getHashIndices(newStr)
+	f.Lock()
+	defer f.Unlock()
+	for _, idx := range oldIndices {
+		if f.array[idx] > 0 {
+			f.array[idx]--
+		}
+	}
+	for _, idx := range newIndices {
+		if f.array[idx] < 255 {
+			f.array[idx]++
+		}
+	}
+}
+
 func (f *CountingFilter) Size() int {
 	return int(f.size)
 }

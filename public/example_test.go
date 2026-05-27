@@ -32,13 +32,22 @@ func ExampleBloomFactory_counting() {
 	filter.Insert("golang")
 	fmt.Println("Contains 'golang':", filter.Contains("golang"))
 
+	// Update the item (only supported by counting Bloom filters)
+	if deletable, ok := filter.(public.DeletableBloomFilter); ok {
+		deletable.Update("golang", "rust")
+	}
+	fmt.Println("Contains 'golang' after update:", filter.Contains("golang"))
+	fmt.Println("Contains 'rust' after update:", filter.Contains("rust"))
+
 	// Delete the item (only supported by counting Bloom filters)
 	if deletable, ok := filter.(public.DeletableBloomFilter); ok {
-		deletable.Delete("golang")
+		deletable.Delete("rust")
 	}
-	fmt.Println("Contains 'golang' after delete:", filter.Contains("golang"))
+	fmt.Println("Contains 'rust' after delete:", filter.Contains("rust"))
 
 	// Output:
 	// Contains 'golang': true
-	// Contains 'golang' after delete: false
+	// Contains 'golang' after update: false
+	// Contains 'rust' after update: true
+	// Contains 'rust' after delete: false
 }

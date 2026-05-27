@@ -84,7 +84,7 @@ func main() {
 }
 ```
 
-### 2. Counting Bloom Filter (with Deletion)
+### 2. Counting Bloom Filter (with Deletion & Update)
 
 ```go
 package main
@@ -104,12 +104,13 @@ func main() {
 	filter.Insert("golang")
 	fmt.Println("Contains golang:", filter.Contains("golang")) // true
 
-	// Check and delete if the filter supports deletion
+	// Update the element (only supported by counting Bloom filters)
 	if deletable, ok := filter.(public.DeletableBloomFilter); ok {
-		deletable.Delete("golang")
+		deletable.Update("golang", "rust")
 	}
 
-	fmt.Println("Contains golang after delete:", filter.Contains("golang")) // false
+	fmt.Println("Contains golang after update:", filter.Contains("golang")) // false
+	fmt.Println("Contains rust after update:", filter.Contains("rust"))     // true
 }
 ```
 
@@ -129,7 +130,7 @@ go run cmd/bloom-cli/main.go
 
 Upon launching, choose between:
 1. **Standard Bit Bloom Filter**
-2. **Counting Bloom Filter** (enables the delete option in the menu)
+2. **Counting Bloom Filter** (enables the delete and update options in the menu)
 
 ### Example CLI Sessions
 
@@ -205,7 +206,7 @@ Enter choice: 4
 Goodbye!
 ```
 
-#### 2. Counting Bloom Filter Session (with deletion support)
+#### 2. Counting Bloom Filter Session (with deletion and update support)
 
 ```text
 =============================================
@@ -225,7 +226,8 @@ Select an option:
   2) Check string
   3) View saturation (Fill Ratio)
   4) Delete string
-  5) Exit
+  5) Update string
+  6) Exit
 Enter choice: 1
 Enter string to insert: golang
 ✔ Successfully inserted string: "golang"
@@ -236,7 +238,8 @@ Select an option:
   2) Check string
   3) View saturation (Fill Ratio)
   4) Delete string
-  5) Exit
+  5) Update string
+  6) Exit
 Enter choice: 2
 Enter string to check: golang
 ★ String "golang" is PROBABLY in the filter (might be a false positive).
@@ -246,18 +249,21 @@ Select an option:
   2) Check string
   3) View saturation (Fill Ratio)
   4) Delete string
-  5) Exit
-Enter choice: 4
-Enter string to delete: golang
-✔ Successfully deleted string: "golang"
-  Current Fill Ratio: 0.00%
+  5) Update string
+  6) Exit
+Enter choice: 5
+Enter old string to replace: golang
+Enter new string: rust
+✔ Successfully updated string from "golang" to "rust"
+  Current Fill Ratio: 0.30%
 ---------------------------------------------
 Select an option:
   1) Insert string
   2) Check string
   3) View saturation (Fill Ratio)
   4) Delete string
-  5) Exit
+  5) Update string
+  6) Exit
 Enter choice: 2
 Enter string to check: golang
 ✖ String "golang" is DEFINITELY NOT in the filter.
@@ -267,9 +273,21 @@ Select an option:
   2) Check string
   3) View saturation (Fill Ratio)
   4) Delete string
-  5) Exit
+  5) Update string
+  6) Exit
+Enter choice: 2
+Enter string to check: rust
+★ String "rust" is PROBABLY in the filter (might be a false positive).
+---------------------------------------------
+Select an option:
+  1) Insert string
+  2) Check string
+  3) View saturation (Fill Ratio)
+  4) Delete string
+  5) Update string
+  6) Exit
 Enter choice: 3
-Filter Saturation (Fill Ratio): 0.0000%
+Filter Saturation (Fill Ratio): 0.3000%
 ✔ Good saturation level.
 ---------------------------------------------
 Select an option:
@@ -277,8 +295,9 @@ Select an option:
   2) Check string
   3) View saturation (Fill Ratio)
   4) Delete string
-  5) Exit
-Enter choice: 5
+  5) Update string
+  6) Exit
+Enter choice: 6
 
 Goodbye!
 ```

@@ -124,3 +124,36 @@ func TestCountingBloomFilterSaturatingArithmetic(t *testing.T) {
 		t.Error("Expected Contains('hello') to be false after deletion matches insertion count")
 	}
 }
+
+func TestCountingBloomFilterUpdate(t *testing.T) {
+	filter, err := BloomFactory("counting", 1000, 3)
+	if err != nil {
+		t.Fatalf("Failed to create counting bloom filter: %v", err)
+	}
+
+	deletable, ok := filter.(DeletableBloomFilter)
+	if !ok {
+		t.Fatal("Counting Bloom filter should implement DeletableBloomFilter interface")
+	}
+
+	// Insert "golang"
+	filter.Insert("golang")
+	if !filter.Contains("golang") {
+		t.Error("Expected Contains('golang') to be true")
+	}
+	if filter.Contains("rust") {
+		t.Error("Expected Contains('rust') to be false")
+	}
+
+	// Update "golang" to "rust"
+	deletable.Update("golang", "rust")
+
+	// "golang" should be deleted (not present anymore)
+	if filter.Contains("golang") {
+		t.Error("Expected Contains('golang') to be false after update")
+	}
+	// "rust" should be inserted (present)
+	if !filter.Contains("rust") {
+		t.Error("Expected Contains('rust') to be true after update")
+	}
+}
