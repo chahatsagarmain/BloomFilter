@@ -43,6 +43,51 @@ bloomfilter/
 
 ---
 
+## How It Works (Step-by-Step)
+
+A Bloom Filter is a space-efficient probabilistic data structure. Here is how the underlying mechanics operate step-by-step:
+
+### 1. Initialization
+When you create a Bloom Filter (using `public.BloomFactory`), you specify:
+* **Size ($m$)**: The number of slots (bits in a standard filter, or 8-bit counters in a counting filter).
+* **Hash Functions ($k$)**: The number of hash indices generated for each string.
+
+### 2. Insertion Step-by-Step
+To insert a string (e.g., `"golang"`):
+1. **Generate Hash Values**: The string is hashed using the FNV-1a hashing algorithm to produce a 64-bit hash value.
+2. **Split Hash**: The 64-bit hash is split into two 32-bit values ($hash_1$ and $hash_2$).
+3. **Kirsch-Mitzenmacher Optimization**: The filter generates $k$ unique slot indices using the formula:
+   $$index_i = (hash_1 + i \times hash_2) \pmod{size}$$
+   This allows us to simulate $k$ independent hash functions in $O(1)$ time with only a single hashing pass.
+4. **Update Slots**:
+   * **Standard Filter**: Sets the bit at each generated index to `true`.
+   * **Counting Filter**: Increments the 8-bit counter at each generated index. The counters use **saturating arithmetic** (stopping at `255` instead of wrapping around to `0` to prevent overflow).
+
+### 3. Membership Lookup Step-by-Step
+To check if a string exists (e.g., `"golang"`):
+1. **Generate Hash Indices**: Calculate the same $k$ indices for the string using steps 1 to 3 above.
+2. **Scan Slots**:
+   * **Standard Filter**: Check if the bit at every index is `true`.
+   * **Counting Filter**: Check if the counter at every index is greater than `0`.
+3. **Evaluation**:
+   * If **any** index contains `false` (standard) or `0` (counting), the item is **DEFINITELY NOT** in the set (0% false negative rate).
+   * If **all** indices contain `true` or $> 0$, the item is **PROBABLY** in the set. There is a small chance of a **false positive** if other elements' hashes have overlapped to set all these slots.
+
+### 4. Deletion Step-by-Step (Counting Bloom Filter only)
+Standard Bloom Filters do not support deletion because clearing bits could accidentally delete other overlapping elements. Counting Bloom Filters solve this:
+1. **Generate Hash Indices**: Calculate the $k$ indices for the string to delete.
+2. **Decrement Counters**: Decrement the counter at each of these indices (stopping at `0` to prevent underflow). Since counters are decremented rather than setting a bit to false, overlapping elements remain correctly represented if their counter is still $> 0$.
+
+### 5. Update Step-by-Step (Counting Bloom Filter only)
+To atomically replace an old element with a new element:
+1. **Calculate Indices**: Generate $k$ indices for the old string, and another $k$ indices for the new string.
+2. **Atomic Lock**: Acquire a write lock to ensure thread safety.
+3. **Decrement Old**: Decrement counters at the indices of the old string.
+4. **Increment New**: Increment counters at the indices of the new string.
+5. **Release Lock**: Release the write lock.
+
+---
+
 ## Installation
 
 Add this package to your Go project:
