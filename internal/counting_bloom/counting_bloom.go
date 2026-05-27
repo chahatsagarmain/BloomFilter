@@ -7,23 +7,23 @@ import (
 
 type CountingFilter struct {
 	sync.RWMutex
-	array	[]uint8
-	size	uint32
-	k		uint32 
+	array []uint8
+	size  uint32
+	k     uint32
 }
 
-func NewFilter(size uint32 , k uint32) (*CountingFilter){
-	if(k == 0){
+func NewFilter(size uint32, k uint32) *CountingFilter {
+	if k == 0 {
 		k = 3
 	}
 	return &CountingFilter{
-		array: make([]uint8 , size),
-		size: size,
-		k: k,
+		array: make([]uint8, size),
+		size:  size,
+		k:     k,
 	}
 }
 
-func (f *CountingFilter) getHashIndices(s string) []uint32{
+func (f *CountingFilter) getHashIndices(s string) []uint32 {
 	indices := make([]uint32, f.k)
 	h := fnv.New64a()
 	_, _ = h.Write([]byte(s))
@@ -39,23 +39,22 @@ func (f *CountingFilter) getHashIndices(s string) []uint32{
 	return indices
 }
 
-
-func(f *CountingFilter) Insert(s string){
+func (f *CountingFilter) Insert(s string) {
 	indices := f.getHashIndices(s)
 	f.Lock()
 	defer f.Unlock()
-	for _ , idx := range indices {
+	for _, idx := range indices {
 		if f.array[idx] < 255 {
 			f.array[idx]++
 		}
 	}
 }
 
-func(f *CountingFilter) Contains(s string) bool {
+func (f *CountingFilter) Contains(s string) bool {
 	indices := f.getHashIndices(s)
 	f.RLock()
 	defer f.RUnlock()
-	for _ , idx := range indices {
+	for _, idx := range indices {
 		if f.array[idx] == 0 {
 			return false
 		}
@@ -63,7 +62,7 @@ func(f *CountingFilter) Contains(s string) bool {
 	return true
 }
 
-func(f *CountingFilter) FillRatio() float64 {
+func (f *CountingFilter) FillRatio() float64 {
 	f.RLock()
 	defer f.RUnlock()
 
@@ -72,7 +71,7 @@ func(f *CountingFilter) FillRatio() float64 {
 	}
 
 	setBits := 0
-	for _ , val := range f.array {
+	for _, val := range f.array {
 		if val > 0 {
 			setBits++
 		}
@@ -81,21 +80,21 @@ func(f *CountingFilter) FillRatio() float64 {
 	return float64(setBits) / float64(f.size)
 }
 
-func(f *CountingFilter) Delete(s string) {
+func (f *CountingFilter) Delete(s string) {
 	indices := f.getHashIndices(s)
 	f.Lock()
 	defer f.Unlock()
-	for _ , idx := range indices {
+	for _, idx := range indices {
 		if f.array[idx] > 0 {
 			f.array[idx]--
 		}
 	}
 }
 
-func(f *CountingFilter) Size() int {
+func (f *CountingFilter) Size() int {
 	return int(f.size)
 }
 
-func(f *CountingFilter) K() int {
+func (f *CountingFilter) K() int {
 	return int(f.k)
 }

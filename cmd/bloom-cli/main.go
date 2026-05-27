@@ -62,7 +62,7 @@ func main() {
 
 	filter, err := public.BloomFactory(bloomType, size, k)
 	if err != nil {
-		fmt.Printf(Red + "✗ Error initializing Bloom Filter: %s\n" + Reset, err.Error())
+		fmt.Printf(Red+"✗ Error initializing Bloom Filter: %s\n"+Reset, err.Error())
 		return
 	}
 
