@@ -349,6 +349,32 @@ Goodbye!
 
 ---
 
+## Benchmarks
+
+We ran benchmarks on an Intel Core i5-12450H CPU (12 cores) to evaluate the performance of our lock-free standard Bloom filter (utilizing `atomic.Bool`) against the thread-safe `RWMutex`-based Counting Bloom filter:
+
+### Single-Threaded Performance
+| Operation | Standard (Atomic) Filter | Counting (Mutex) Filter | Speedup |
+| :--- | :--- | :--- | :--- |
+| **Insert** | ~108 ns/op | ~198 ns/op | **1.8x** |
+| **Contains** | ~28 ns/op | ~72 ns/op | **2.6x** |
+
+### Parallel / Concurrent Performance (12 Cores)
+| Operation | Standard (Atomic) Filter | Counting (Mutex) Filter | Speedup |
+| :--- | :--- | :--- | :--- |
+| **Insert** | ~118 ns/op | ~262 ns/op | **2.2x** |
+| **Contains** | ~11 ns/op | ~99 ns/op | **8.8x** |
+
+### Run Benchmarks Yourself
+
+To run the benchmark suite, execute:
+```bash
+cd public
+go test -bench="." -benchmem -run="^$"
+```
+
+---
+
 ## Running Tests
 
 To execute the unit, statistical verification, and runnable examples:

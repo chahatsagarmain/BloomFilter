@@ -2,12 +2,13 @@ package bloom
 
 import (
 	"hash/fnv"
+	"sync/atomic"
 )
 
 // Filter represents a Bloom Filter data structure.
-// It uses a slice of booleans for the bit representation.
+// It uses a slice of atomic.Bool for thread-safe bit representation.
 type Filter struct {
-	bitarray []bool
+	bitarray []atomic.Bool
 	size     uint32
 	k        uint32 // number of hash functions
 }
@@ -18,7 +19,7 @@ func New(size uint32, k uint32) *Filter {
 		k = 3 // default to 3 hash functions if not specified
 	}
 	return &Filter{
-		bitarray: make([]bool, size),
+		bitarray: make([]atomic.Bool, size),
 		size:     size,
 		k:        k,
 	}
@@ -43,19 +44,21 @@ func (f *Filter) getHashIndices(s string) []uint32 {
 }
 
 // Insert adds a string to the Bloom Filter by setting the corresponding bits to true.
+// This operation is lock-free and thread-safe using atomic stores.
 func (f *Filter) Insert(s string) {
 	indices := f.getHashIndices(s)
 	for _, idx := range indices {
-		f.bitarray[idx] = true
+		f.bitarray[idx].Store(true)
 	}
 }
 
 // Contains checks if a string is in the Bloom Filter.
 // Returns true if the string is probably present, and false if it is definitely not.
+// This operation is thread-safe using atomic loads.
 func (f *Filter) Contains(s string) bool {
 	indices := f.getHashIndices(s)
 	for _, idx := range indices {
-		if !f.bitarray[idx] {
+		if !f.bitarray[idx].Load() {
 			return false
 		}
 	}
@@ -69,8 +72,8 @@ func (f *Filter) FillRatio() float64 {
 		return 0.0
 	}
 	var setBits int
-	for _, val := range f.bitarray {
-		if val {
+	for i := range f.bitarray {
+		if f.bitarray[i].Load() {
 			setBits++
 		}
 	}

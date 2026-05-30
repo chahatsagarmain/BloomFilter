@@ -1,6 +1,8 @@
 package public
 
 import (
+	"fmt"
+	"sync"
 	"testing"
 )
 
@@ -155,5 +157,38 @@ func TestCountingBloomFilterUpdate(t *testing.T) {
 	// "rust" should be inserted (present)
 	if !filter.Contains("rust") {
 		t.Error("Expected Contains('rust') to be true after update")
+	}
+}
+
+func TestPublicConcurrency(t *testing.T) {
+	for _, bloomType := range []string{"bit", "counting"} {
+		t.Run(bloomType, func(t *testing.T) {
+			filter, err := BloomFactory(bloomType, 5000, 3)
+			if err != nil {
+				t.Fatalf("Failed to create filter: %v", err)
+			}
+
+			const numWorkers = 50
+			const opsPerWorker = 100
+
+			var wg sync.WaitGroup
+			wg.Add(numWorkers)
+
+			for i := 0; i < numWorkers; i++ {
+				go func(workerID int) {
+					defer wg.Done()
+					for j := 0; j < opsPerWorker; j++ {
+						val := fmt.Sprintf("val-%s-%d-%d", bloomType, workerID, j)
+						filter.Insert(val)
+						if !filter.Contains(val) {
+							t.Errorf("Expected filter to contain %s", val)
+						}
+						_ = filter.FillRatio()
+					}
+				}(i)
+			}
+
+			wg.Wait()
+		})
 	}
 }

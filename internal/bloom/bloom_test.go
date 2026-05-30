@@ -2,6 +2,7 @@ package bloom
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 )
 
@@ -84,5 +85,36 @@ func TestFalsePositiveRate(t *testing.T) {
 	// We'll allow up to 5% to account for statistical variance.
 	if fpRate > 0.05 {
 		t.Errorf("False positive rate was too high: %f, expected < 0.05", fpRate)
+	}
+}
+
+func TestConcurrency(t *testing.T) {
+	f := New(10000, 4)
+
+	const numGoroutines = 100
+	const numInserts = 100
+
+	var wg sync.WaitGroup
+	wg.Add(numGoroutines)
+
+	for i := 0; i < numGoroutines; i++ {
+		go func(gID int) {
+			defer wg.Done()
+			for j := 0; j < numInserts; j++ {
+				f.Insert(fmt.Sprintf("item-%d-%d", gID, j))
+			}
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Verify that all inserted elements are present (no false negatives due to race conditions)
+	for i := 0; i < numGoroutines; i++ {
+		for j := 0; j < numInserts; j++ {
+			item := fmt.Sprintf("item-%d-%d", i, j)
+			if !f.Contains(item) {
+				t.Errorf("Expected Contains(%q) to be true, but got false", item)
+			}
+		}
 	}
 }
