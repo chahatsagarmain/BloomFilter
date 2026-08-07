@@ -346,32 +346,77 @@ Enter choice: 6
 
 Goodbye!
 ```
-
----
-
 ## Benchmarks
+
+### 1. Speed & Throughput Performance
 
 We ran benchmarks on an Intel Core i5-12450H CPU (12 cores) to evaluate the performance of our lock-free standard Bloom filter (utilizing `atomic.Bool`) against the thread-safe `RWMutex`-based Counting Bloom filter:
 
-### Single-Threaded Performance
+#### Single-Threaded Performance
 | Operation | Standard (Atomic) Filter | Counting (Mutex) Filter | Speedup |
 | :--- | :--- | :--- | :--- |
 | **Insert** | ~108 ns/op | ~198 ns/op | **1.8x** |
 | **Contains** | ~28 ns/op | ~72 ns/op | **2.6x** |
 
-### Parallel / Concurrent Performance (12 Cores)
+#### Parallel / Concurrent Performance (12 Cores)
 | Operation | Standard (Atomic) Filter | Counting (Mutex) Filter | Speedup |
 | :--- | :--- | :--- | :--- |
 | **Insert** | ~118 ns/op | ~262 ns/op | **2.2x** |
 | **Contains** | ~11 ns/op | ~99 ns/op | **8.8x** |
 
-### Run Benchmarks Yourself
+#### Run Speed Benchmarks Yourself
 
-To run the benchmark suite, execute:
+To run the speed benchmark suite, execute:
 ```bash
 cd public
 go test -bench="." -benchmem -run="^$"
 ```
+
+### 2. False Positive Rate (FPR) Verification & Visualization
+
+We also provide a dedicated benchmarking suite to measure empirical False Positive Rates under varying constraints and map them against mathematical upper-bounds.
+
+#### Variables Used
+| Variable | Name | Description |
+| :--- | :--- | :--- |
+| **$m$** | Filter Size | The total bit capacity of the Bloom filter array (set to $100,000$ bits in the experiments). |
+| **$n$** | Number of Elements | The count of unique items inserted into the filter. |
+| **$k$** | Hash Functions | The number of simulated hash functions per element (uses Kirsch-Mitzenmacher optimization). |
+| **$F$** | Fill Ratio / Saturation | The proportion of bits set to `true` in the filter ($F \in [0, 1]$). |
+
+#### Mathematical Formulas Used
+1. **Empirical Fill Ratio**:
+   $$F = \frac{\text{bits set to true}}{m}$$
+2. **Target Element Count ($n$) from Target Fill Ratio ($F$)**:
+   To evenly space out data points across the saturation scale, the number of elements needed is calculated as:
+   $$n = \text{round}\left(-\frac{m}{k} \ln(1 - F)\right)$$
+3. **Theoretical False Positive Rate**:
+   $$P_{\text{theoretical}} \approx \left(1 - e^{-k \cdot n / m}\right)^k$$
+4. **Optimal Hash Functions Count ($k_{\text{opt}}$)**:
+   Minimizes false positives for a given element density:
+   $$k_{\text{opt}} = \ln(2) \cdot \frac{m}{n} \approx 0.693 \cdot \frac{m}{n}$$
+
+#### Calculated Plots
+1. **False Positive Rate vs. Filter Saturation (`benchmark/fpr_vs_elements.png`)**:
+   * **Primary X-Axis (Bottom)**: Filter Saturation (Fill Ratio %) spaced out evenly from 0% to 100% in steps of 2%.
+   * **Secondary X-Axis (Top)**: Number of elements filled ($n$).
+   * **Y-Axis**: False Positive Rate (Empirical vs. Theoretical).
+   * **Insights**: Demonstrates that FPR is minimal ($<1\%$) below 30% saturation and rises exponentially once saturation passes 50%.
+2. **False Positive Rate vs. Hash Functions $k$ (`benchmark/fpr_vs_k.png`)**:
+   * **X-Axis**: Number of hash functions ($k \in [1, 16]$).
+   * **Y-Axis**: False Positive Rate (Empirical vs. Theoretical).
+   * **Insights**: Demonstrates a U-shaped curve showing that the optimal $k$ (empirically $k = 3$ or $k = 4$) minimizes false positive rates for a given density.
+
+#### Running the FPR Benchmark Suite
+Make sure you have Python with `matplotlib` installed. Then run:
+```bash
+make benchmark
+```
+This command automatically:
+1. Builds and executes the Go benchmarking runner `cmd/bloom-benchmark` to collect experimental data.
+2. Exports the results into `benchmark_results.json`.
+3. Runs the Python plotting utility `benchmark/plot.py` to generate the figures.
+
 
 ---
 
